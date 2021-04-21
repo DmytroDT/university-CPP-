@@ -1,0 +1,7 @@
+**/debug/
+**/release/
+**/.vs/
+**/theory of information/IT1/txt
+
+*.vcxproj*
+*.sln
