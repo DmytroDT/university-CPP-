@@ -274,8 +274,8 @@ public:
 	 }
 
 	  T getElement(int indR, int indC) {
-		 return Array[indR][indC];
-	}
+		 return Array[indR][indC]
+	  }
 
 	 template<typename T>
 	 friend class Dynamic2DIterator;
