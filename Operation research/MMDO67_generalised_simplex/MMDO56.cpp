@@ -108,6 +108,14 @@ public:
 		return !(*this < rhs);
 	}
 
+	bool operator==(double rhs) const {
+		return (!checkIfM())&&(this->number == rhs);
+	}
+
+	bool operator!=(double rhs) const {
+		return !(*this == rhs);
+	}
+
 #pragma endregion 
 
 #pragma region arithmetic
@@ -152,6 +160,7 @@ public:
 	mNumb& operator*= (const mNumb & rhs) {
 		if (!checkIfM()) {
 			m = (number * rhs.m);
+			number = 0.;
 		}
 		return *this;
 	}
@@ -165,6 +174,7 @@ public:
 	mNumb& operator/= (const mNumb& rhs) {
 		if (!checkIfM()) {
 			number = (m/rhs.m);
+			m = 0.;
 		}
 		return *this;
 	}
@@ -410,11 +420,10 @@ public:
 
     simplexSolver(mNumb aArr[],mNumb bArr[],string sArr[],int eqN,int xN) {
 		mArr=new Dynamic2Darray<mNumb>(aArr, eqN, xN);
-
 			addArtificialBasis(mArr, sArr);
 			mArr->addCol(bArr);
 			inverseTargetF();
-			seekBasis(-1);
+			eliminateObjectiveM(seekMBasis(seekBasis()));
     }
 
 	mNumb* additionalBasis(int pos,int val,int size) {
@@ -436,8 +445,8 @@ public:
 			else {
 				if (signV[i] == ">=") {
 					arr->addCol(additionalBasis(i, 1, eqN));
+					(*arr)(eqN - 1, arr->getColCount() - 1).setM(-1);
 					arr->addCol(additionalBasis(i, -1, eqN));
-					(*arr)(eqN-1, arr->getColCount()-1).setM(-1);
 				}
 			}
 		}
@@ -449,31 +458,126 @@ public:
 		}
 	}
 
-	vector<int> seekBasis(int sign) {
+	vector<int> seekBasis() {
 		int rowC = mArr->getRowCount()-1;
 		int colC = mArr->getColCount()-1;
 		int numbersInc;
+		int row = 0;
 		vector<int> indexVect;
 		
-		for (int i = 0; i < rowC; i++) {
+		for (int i = 0; i < colC; i++) {
 			numbersInc = 0;
-			for (int j = 0; j < colC; j++) {
-				if (((*mArr)(i, j)*sign) > 0.) {
+			for (int j = 0; j < rowC; j++) {
+				if ((*mArr)(j, i) != 0.) {
 					numbersInc++;
+					row = j;
 				}
-				if (numbersInc == 1) {
-					indexVect.push_back(i);
-					indexVect.push_back(j);
-				}
+			}
+			if (numbersInc == 1) {
+				indexVect.push_back(row);
+				indexVect.push_back(i);
 			}
 		}
 		return indexVect;
 	}
 
-	void eliminateObjectiveM(vector<int> nAIV) {
-		for (int i = 0; i < nAIV.size(); i+=2) {
+	vector<int> seekMBasis(vector<int> nAIV) {
+		vector<int> nBV;
 
+		if (nAIV.size() > 1) {
+			for (int i = 0; i < nAIV.size(); i += 2) {
+				if ((*mArr)(nAIV[i], nAIV[i + 1])<0.) {
+					nBV.push_back(nAIV[i]);
+					nBV.push_back(nAIV[i + 1]);
+				}
+			}
+			return nBV;
 		}
+	}
+
+	void eliminateObjectiveM(vector<int> nAIV) {
+		
+		if (nAIV.size() > 1) {
+			for (int i = 0; i < nAIV.size(); i += 2) {
+				addRowsM(copyRow(nAIV[i]), mArr->getRowCount()-1, * (new mNumb(0., -1.)));
+			}
+		}
+	}
+
+	mNumb* copyRow(int rIndex) {
+		int rSize = mArr->getColCount();
+		mNumb* tArr = new mNumb[rSize];
+
+		for (int i = 0; i < rSize; i++) {
+			tArr[i] = (*mArr)(rIndex, i);
+		}
+		return tArr;
+	}
+
+	void addRowsM(mNumb* copy,int rIndex, mNumb coef) {
+		int rSize = mArr->getColCount();
+
+		for (int i = 0; i < rSize; i++) {
+			copy[i] *= coef;
+			 (*mArr)(rIndex, i)+=copy[i];
+		}
+	}
+
+	void addRowsCoef(mNumb* copy, int rIndex, double coef) {
+		int rSize = mArr->getColCount();
+
+		for (int i = 0; i < rSize; i++) {
+			copy[i] *= coef;
+			(*mArr)(rIndex, i) += copy[i] ;
+		}
+	}
+
+	int findMinCol() {
+		int index=0;
+		mNumb min(0., 0.);
+		mNumb* ref;
+
+		for (int i = 0; i < mArr->getColCount()-1; i++) {
+			ref = &(*mArr)(mArr->getRowCount() - 1, i);
+			if ((*ref<0)&&(min> *ref)) {
+				min = *ref;
+				index = i;
+			}
+		}
+		return index;
+	}
+
+	int findMinRrow(int col) {
+		int row=0;
+		mNumb ratio;
+		mNumb min(30);
+		mNumb* ref;
+		mNumb* refB;
+
+		for (int i = 0; i < mArr->getRowCount() - 1; i++) {
+			ref = &(*mArr)(i, col);
+			refB = &(*mArr)(i, mArr->getColCount()-1);
+			ratio = *refB / (ref->getN());
+			if ((ratio > 0) && ((min > ratio))) {
+				row = i;
+				min = ratio;
+			}
+		}
+		return row;
+	}
+
+	void pivot(int row, int col) {
+
+		double coef = 0;
+
+		for (int i = 0; i < mArr->getRowCount(); i++) {
+			if (i != row) {
+				copyRow(row);
+				coef = -((*mArr)(i, col).getN() / (*mArr)(row, col).getN());
+				addRowsCoef(copyRow(row), i, coef);
+			}
+		}
+
 	}
 
 	void printSolution() {
@@ -501,9 +605,8 @@ int main()
 
 	s.printSolution();
 
-	mNumb a(0, 1);
-	mNumb b(0);
-	a= b-a;
-	cout << "\n"<<a;
+	cout<<"\n\nmins at:"<<s.findMinCol()<<" col";
+	cout << "\n\nmins at:" <<s.findMinRrow( s.findMinCol()) << " row";
+
 }
 
