@@ -38,20 +38,20 @@ public:
 	}
 
 #pragma endregion
-    friend ostream& operator<<(ostream& os, const mNumb& ref) {
-        os << ref.number;
-        if (ref.checkIfM()) {
-            if (ref.m < 0) {
-                os << ref.m << "M";
-            }
-            else {
-                os << "+" << ref.m << "M";
-            }
-        }
+  
+	friend ostream& operator<<(ostream& os, const mNumb& ref) {
+		os << ref.number;
+		if (ref.checkIfM()) {
+			if (ref.m < 0) {
+				os << ref.m << "M";
+			}
+			else {
+				os << "+" << ref.m << "M";
+			}
+		}
 
-        return os;
-    }
-
+		return os;
+	}
 
 #pragma region bool_same_type
 
@@ -378,9 +378,43 @@ private:
 	Dynamic2Darray<mNumb>* mArr;
 public:
 
-    simplexSolver(double *aArr,string *sArr,int eqN,int xN) {
-    
+    simplexSolver(mNumb aArr[],string sArr[],int eqN,int xN) {
+		mArr=new Dynamic2Darray<mNumb>(aArr, eqN, xN);
+
+			addArtificialBasis(mArr, sArr);
+	
     }
+
+	mNumb* additionalBasis(int pos,int val,int size) {
+		mNumb* arr = new mNumb[size];
+
+		for (int i = 0; i < size; i++) {
+			arr[i] = (i == pos) ? *(new mNumb(val)) : *(new mNumb(0));
+		}
+		return arr;
+	}
+
+	void addArtificialBasis(Dynamic2Darray<mNumb> *arr, string signV[]) {
+		int eqN = arr->getRowCount();
+
+		for (int i = 0; i < eqN; i++) {
+			if (signV[i] == "<=") {
+				arr->addCol(additionalBasis(i, 1, eqN));
+			}
+			else {
+				if (signV[i] == ">=") {
+					arr->addCol(additionalBasis(i, 1, eqN));
+					arr->addCol(additionalBasis(i, -1, eqN));
+					(*arr)(eqN-1, arr->getColCount()-1).setM(-1);
+				}
+			}
+		}
+	}
+
+
+	void printSolution() {
+		cout << *mArr;
+	}
 
 };
 
@@ -397,5 +431,9 @@ int main()
 
     string sArr[4] = { "<=","<=",">=","=" };
 
+	simplexSolver s(arr,sArr,eqN,xN);
+
+	s.printSolution();
+	
 }
 
