@@ -1,5 +1,6 @@
 #include <string> 
 #include <iostream>
+#include <vector>
 using  namespace std;
 
 class mNumb {
@@ -122,17 +123,15 @@ public:
 
     mNumb& operator+=(const mNumb& rhs) {
         number += rhs.number;
-        if (checkIfRhsM(rhs)) {
-            m += rhs.m;
-        }
+        m += rhs.m;
+
         return *this;
     }
 
     mNumb& operator-=(const mNumb& rhs) {
         number -= rhs.number;
-        if (checkIfRhsM(rhs)) {
-            m -= rhs.m;
-        }
+        m -= rhs.m;
+        
         return *this;
     }
 
@@ -148,13 +147,47 @@ public:
         return temp;
     }
 
-    mNumb& operator*=(double coef) {
-        number *= coef;
-        if (checkIfM()) {
-            m *= coef;
-        }
-        return *this;
-    }
+
+
+	mNumb& operator*= (const mNumb & rhs) {
+		if (!checkIfM()) {
+			m = (number * rhs.m);
+		}
+		return *this;
+	}
+
+	mNumb operator*(const mNumb& rhs) const {
+		mNumb temp(*this);
+		temp *= rhs;
+		return temp;
+	}
+
+	mNumb& operator/= (const mNumb& rhs) {
+		if (!checkIfM()) {
+			number = (m/rhs.m);
+		}
+		return *this;
+	}
+
+	mNumb operator/(const mNumb& rhs) const {
+		mNumb temp(*this);
+		temp /= rhs;
+		return temp;
+	}
+
+	mNumb& operator*=(double coef) {
+		number /= coef;
+		if (checkIfM()) {
+			m *= coef;
+		}
+		return *this;
+	}
+
+	mNumb operator*(double coef) const {
+		mNumb temp(*this);
+		temp *= coef;
+		return temp;
+	}
 
     mNumb& operator/=(double coef) {
         number /= coef;
@@ -162,12 +195,6 @@ public:
             m /= coef;
         }
         return *this;
-    }
-
-    mNumb operator*(double coef) const {
-        mNumb temp(*this);
-        temp *= coef;
-        return temp;
     }
 
     mNumb operator/(double coef) const {
@@ -189,7 +216,7 @@ private:
 	unsigned int D1size = 1, D2size = 1;
 
 public:
-
+#pragma region constructors
 	Dynamic2Darray(unsigned int D1size, unsigned int D2size) {
 
 		this->D1size = D1size;
@@ -269,7 +296,9 @@ public:
 			}
 		}
 	}
+#pragma endregion
 
+#pragma region structure_manipulation 
 	void addRow(T* row) {
 
 		T** newArray;
@@ -327,6 +356,7 @@ public:
 		Array = newArray;
 
 	}
+#pragma endregion
 
 	T& operator()(int indexR, int indexC) {
 		return Array[indexR][indexC];
@@ -378,11 +408,13 @@ private:
 	Dynamic2Darray<mNumb>* mArr;
 public:
 
-    simplexSolver(mNumb aArr[],string sArr[],int eqN,int xN) {
+    simplexSolver(mNumb aArr[],mNumb bArr[],string sArr[],int eqN,int xN) {
 		mArr=new Dynamic2Darray<mNumb>(aArr, eqN, xN);
 
 			addArtificialBasis(mArr, sArr);
-	
+			mArr->addCol(bArr);
+			inverseTargetF();
+			seekBasis(-1);
     }
 
 	mNumb* additionalBasis(int pos,int val,int size) {
@@ -411,6 +443,38 @@ public:
 		}
 	}
 
+	void inverseTargetF() {
+		for (int i = 0; i < mArr->getColCount(); i++) {
+			(*mArr)(mArr->getRowCount() - 1, i) *= (-1);
+		}
+	}
+
+	vector<int> seekBasis(int sign) {
+		int rowC = mArr->getRowCount()-1;
+		int colC = mArr->getColCount()-1;
+		int numbersInc;
+		vector<int> indexVect;
+		
+		for (int i = 0; i < rowC; i++) {
+			numbersInc = 0;
+			for (int j = 0; j < colC; j++) {
+				if (((*mArr)(i, j)*sign) > 0.) {
+					numbersInc++;
+				}
+				if (numbersInc == 1) {
+					indexVect.push_back(i);
+					indexVect.push_back(j);
+				}
+			}
+		}
+		return indexVect;
+	}
+
+	void eliminateObjectiveM(vector<int> nAIV) {
+		for (int i = 0; i < nAIV.size(); i+=2) {
+
+		}
+	}
 
 	void printSolution() {
 		cout << *mArr;
@@ -424,16 +488,22 @@ int main()
 	int xN = 3;
 
 	mNumb arr[] = { 
-	{2},{-1},{8},
-	{1},{1},{4},
-	{-3},{2},{3}, 
-	{2},{-1},{0} };
+	{2},{-1},
+	{1},{1},
+	{-3},{2}, 
+	{2},{-1}, };
+
+	mNumb bArr[] = { 8,4,3,0 };
 
     string sArr[4] = { "<=","<=",">=","=" };
 
-	simplexSolver s(arr,sArr,eqN,xN);
+	simplexSolver s(arr,bArr,sArr,eqN,xN-1);
 
 	s.printSolution();
-	
+
+	mNumb a(0, 1);
+	mNumb b(0);
+	a= b-a;
+	cout << "\n"<<a;
 }
 
