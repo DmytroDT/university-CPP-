@@ -1,5 +1,6 @@
 #include <string> 
 #include <iostream>
+#include <iomanip>  
 #include <vector>
 using  namespace std;
 
@@ -44,10 +45,10 @@ public:
 		os << ref.number;
 		if (ref.checkIfM()) {
 			if (ref.m < 0) {
-				os << ref.m << "M";
+				os << setprecision(2) << ref.m << "M";
 			}
 			else {
-				os << "+" << ref.m << "M";
+				os << "+" << setprecision(2) << ref.m << "M";
 			}
 		}
 
@@ -158,9 +159,10 @@ public:
 
 
 	mNumb& operator*= (const mNumb & rhs) {
-		if (!checkIfM()) {
-			m = (number * rhs.m);
-			number = 0.;
+		if (!checkIfM()&&(getN() != 0)) {
+			//m = (number * rhs.m);
+			//number = 0.;
+			*this = rhs * this->getN();
 		}
 		return *this;
 	}
@@ -172,9 +174,10 @@ public:
 	}
 
 	mNumb& operator/= (const mNumb& rhs) {
-		if (!checkIfM()) {
-			number = (m/rhs.m);
-			m = 0.;
+		if (!checkIfM()&&(getN() != 0)) {
+			//number = (m/rhs.m);
+			//m = 0.;
+			*this = rhs / this->getN();
 		}
 		return *this;
 	}
@@ -186,7 +189,7 @@ public:
 	}
 
 	mNumb& operator*=(double coef) {
-		number /= coef;
+		number *= coef;
 		if (checkIfM()) {
 			m *= coef;
 		}
@@ -527,6 +530,7 @@ public:
 		int rSize = mArr->getColCount();
 
 		for (int i = 0; i < rSize; i++) {
+			//copy[i].setN(copy[i].getN()*coef) ;
 			copy[i] *= coef;
 			(*mArr)(rIndex, i) += copy[i] ;
 		}
@@ -566,18 +570,56 @@ public:
 		return row;
 	}
 
-	void pivot(int row, int col) {
+	void normalise(int row, int col) {
+		double coef = (*mArr)(row, col).getN();
 
-		double coef = 0;
-
-		for (int i = 0; i < mArr->getRowCount(); i++) {
-			if (i != row) {
-				copyRow(row);
-				coef = -((*mArr)(i, col).getN() / (*mArr)(row, col).getN());
-				addRowsCoef(copyRow(row), i, coef);
-			}
+		for (int i = 0; i < mArr->getColCount(); i++) {
+			(*mArr)(row, i) /= coef;
 		}
 
+	}
+
+	void pivot(int row, int col) {
+		mNumb mCoef;
+		double coef = 0;
+		normalise(row, col);
+
+		for (int i = 0; i < mArr->getRowCount(); i++) {
+			copyRow(row);
+			if (i != row) {
+				if ((*mArr)(i, col).checkIfM()) {
+					mCoef = (*mArr)(i, col)*(-1);
+					addRowsM(copyRow(row), i, mCoef);
+				}
+				else {					
+					coef = -((*mArr)(i, col).getN());
+					addRowsCoef(copyRow(row), i, coef);
+				}
+			}
+		}
+	}
+
+	bool optimal() {
+		bool result = true;
+		for (int i = 0; i < mArr->getColCount()-1; i++) {
+			if ((*mArr)(mArr->getRowCount() - 1, i) < 0.) {
+				result = false;
+			}
+		}
+		return result;
+	}
+
+	void solve() {
+		int opR = 0;
+		int opC = 0;
+
+		while (!optimal()) {			
+			opC = findMinCol();
+			opR = findMinRrow(opC);
+			cout << "\nmin col -" << opC << " min row -" << opR;
+			pivot(opR, opC);
+			printSolution();
+		}
 	}
 
 	void printSolution() {
@@ -597,7 +639,7 @@ int main()
 	{-3},{2}, 
 	{2},{-1}, };
 
-	mNumb bArr[] = { 8,4,3,0 };
+	mNumb bArr[] = { 8,5,3,0 };
 
     string sArr[4] = { "<=","<=",">=","=" };
 
@@ -605,8 +647,13 @@ int main()
 
 	s.printSolution();
 
-	cout<<"\n\nmins at:"<<s.findMinCol()<<" col";
-	cout << "\n\nmins at:" <<s.findMinRrow( s.findMinCol()) << " row";
+	//cout<<"\n\nmins at:"<<s.findMinCol()<<" col";
+	//cout << "\n\nmins at:" <<s.findMinRrow( s.findMinCol()) << " row";
+	//
+	//s.pivot(s.findMinRrow(s.findMinCol()), s.findMinCol());
+	//s.printSolution();
+
+	s.solve();
 
 }
 
