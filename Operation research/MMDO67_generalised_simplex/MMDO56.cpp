@@ -419,13 +419,19 @@ public:
 class simplexSolver {
 private:
 	Dynamic2Darray<mNumb>* mArr;
+	bool minOrMax;
+	mNumb* objectiveF;
 public:
 
-    simplexSolver(mNumb aArr[],mNumb bArr[],string sArr[],int eqN,int xN) {
-		mArr=new Dynamic2Darray<mNumb>(aArr, eqN, xN);
+    simplexSolver(bool minOrMax,mNumb aArr[],mNumb bArr[],string sArr[],int eqN,int xN) {
+		this->minOrMax = minOrMax;
+			mArr=new Dynamic2Darray<mNumb>(aArr, eqN, xN);
 			addArtificialBasis(mArr, sArr);
 			mArr->addCol(bArr);
-			inverseTargetF();
+
+			if (minOrMax){
+				inverseTargetF();
+			}
 			eliminateObjectiveM(seekMBasis(seekBasis()));
     }
 
@@ -489,7 +495,7 @@ public:
 
 		if (nAIV.size() > 1) {
 			for (int i = 0; i < nAIV.size(); i += 2) {
-				if ((*mArr)(nAIV[i], nAIV[i + 1])<0.) {
+				if ((*mArr)(mArr->getRowCount() - 1, nAIV[i + 1]).checkIfM()) {
 					nBV.push_back(nAIV[i]);
 					nBV.push_back(nAIV[i + 1]);
 				}
@@ -502,7 +508,8 @@ public:
 		
 		if (nAIV.size() > 1) {
 			for (int i = 0; i < nAIV.size(); i += 2) {
-				addRowsM(copyRow(nAIV[i]), mArr->getRowCount()-1, * (new mNumb(0., -1.)));
+				//addRowsM(copyRow(nAIV[i]), mArr->getRowCount()-1, * (new mNumb(0., -1.)));
+				addRowsM(copyRow(nAIV[i]), mArr->getRowCount() - 1, (*mArr)(mArr->getRowCount() - 1,nAIV[i+1])*(-1));
 			}
 		}
 	}
@@ -530,7 +537,6 @@ public:
 		int rSize = mArr->getColCount();
 
 		for (int i = 0; i < rSize; i++) {
-			//copy[i].setN(copy[i].getN()*coef) ;
 			copy[i] *= coef;
 			(*mArr)(rIndex, i) += copy[i] ;
 		}
@@ -643,17 +649,20 @@ int main()
 
     string sArr[4] = { "<=","<=",">=","=" };
 
-	simplexSolver s(arr,bArr,sArr,eqN,xN-1);
-
-	s.printSolution();
-
-	//cout<<"\n\nmins at:"<<s.findMinCol()<<" col";
-	//cout << "\n\nmins at:" <<s.findMinRrow( s.findMinCol()) << " row";
-	//
-	//s.pivot(s.findMinRrow(s.findMinCol()), s.findMinCol());
+	//simplexSolver sMax(false,arr,bArr,sArr,eqN,xN-1);
+	//sMax.printSolution();
+	//sMax.solve();
 	//s.printSolution();
 
-	s.solve();
+	//s.solve();
+
+	simplexSolver sMin(true, arr, bArr, sArr, eqN, xN - 1);
+	sMin.printSolution();
+	sMin.solve();
+
+	//s2.printSolution();
+
+	//s2.solve();
 
 }
 
