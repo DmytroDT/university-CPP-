@@ -426,12 +426,13 @@ public:
     simplexSolver(bool minOrMax,mNumb aArr[],mNumb bArr[],string sArr[],int eqN,int xN) {
 		this->minOrMax = minOrMax;
 			mArr=new Dynamic2Darray<mNumb>(aArr, eqN, xN);
-			addArtificialBasis(mArr, sArr);
-			mArr->addCol(bArr);
-
-			if (minOrMax){
+			if (minOrMax) {
 				inverseTargetF();
 			}
+			addArtificialBasis(mArr, sArr);
+			mArr->addCol(bArr);
+			printSolution();
+			inverseTargetF();
 			eliminateObjectiveM(seekMBasis(seekBasis()));
     }
 
@@ -508,7 +509,6 @@ public:
 		
 		if (nAIV.size() > 1) {
 			for (int i = 0; i < nAIV.size(); i += 2) {
-				//addRowsM(copyRow(nAIV[i]), mArr->getRowCount()-1, * (new mNumb(0., -1.)));
 				addRowsM(copyRow(nAIV[i]), mArr->getRowCount() - 1, (*mArr)(mArr->getRowCount() - 1,nAIV[i+1])*(-1));
 			}
 		}
@@ -643,26 +643,20 @@ int main()
 	{2},{-1},
 	{1},{1},
 	{-3},{2}, 
-	{2},{-1}, };
+	{-2},{1}, };
 
 	mNumb bArr[] = { 8,5,3,0 };
 
     string sArr[4] = { "<=","<=",">=","=" };
 
-	//simplexSolver sMax(false,arr,bArr,sArr,eqN,xN-1);
-	//sMax.printSolution();
-	//sMax.solve();
-	//s.printSolution();
+	simplexSolver sMax(false,arr,bArr,sArr,eqN,xN-1);
+	sMax.printSolution();
+	sMax.solve();
 
-	//s.solve();
 
 	simplexSolver sMin(true, arr, bArr, sArr, eqN, xN - 1);
 	sMin.printSolution();
 	sMin.solve();
-
-	//s2.printSolution();
-
-	//s2.solve();
 
 }
 
