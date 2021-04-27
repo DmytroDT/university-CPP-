@@ -48,7 +48,7 @@ public:
 				os << setprecision(2) << ref.m << "M";
 			}
 			else {
-				os << "+" << setprecision(2) << ref.m << "M";
+				os << "+"  << setprecision(2) << ref.m << "M";
 			}
 		}
 
@@ -220,7 +220,6 @@ public:
 
 };
 
-
 template <typename T>
 class Dynamic2Darray {
 
@@ -376,11 +375,11 @@ public:
 	}
 
 	friend ostream& operator<<(ostream& os, Dynamic2Darray& dArr) {
-
-		os << "\nDynamic array elements:\n";
+		cout << "\n";
 		for (unsigned int i = 0; i < dArr.D1size; i++) {
 			for (unsigned int j = 0; j < dArr.D2size; j++) {
-				os << "A[" << i << "][" << j << "]=" << dArr.Array[i][j] << "\t";
+				//os << "A[" << i << "][" << j << "]=" << dArr.Array[i][j] << "\t";
+				os << dArr.Array[i][j]<<"\t";
 			}
 			os << endl;
 		}
@@ -448,16 +447,20 @@ public:
 	void addArtificialBasis(Dynamic2Darray<mNumb> *arr, string signV[]) {
 		int eqN = arr->getRowCount();
 
-		for (int i = 0; i < eqN; i++) {
+		for (int i = 0; i < eqN-1; i++) {
 			if (signV[i] == "<=") {
 				arr->addCol(additionalBasis(i, 1, eqN));
 			}
-			else {
-				if (signV[i] == ">=") {
-					arr->addCol(additionalBasis(i, 1, eqN));
-					(*arr)(eqN - 1, arr->getColCount() - 1).setM(-1);
-					arr->addCol(additionalBasis(i, -1, eqN));
-				}
+		
+			if (signV[i] == ">=") {
+				arr->addCol(additionalBasis(i, 1, eqN));
+				(*arr)(eqN - 1, arr->getColCount() - 1).setM(-1);
+				arr->addCol(additionalBasis(i, -1, eqN));
+			}
+			
+			if (signV[i] == "=") {
+				arr->addCol(additionalBasis(i, 1, eqN));
+				(*arr)(eqN - 1, arr->getColCount() - 1).setM(-1);
 			}
 		}
 	}
@@ -478,7 +481,7 @@ public:
 		for (int i = 0; i < colC; i++) {
 			numbersInc = 0;
 			for (int j = 0; j < rowC; j++) {
-				if ((*mArr)(j, i) != 0.) {
+				if ((*mArr)(j, i) > 0.) {
 					numbersInc++;
 					row = j;
 				}
@@ -567,7 +570,7 @@ public:
 		for (int i = 0; i < mArr->getRowCount() - 1; i++) {
 			ref = &(*mArr)(i, col);
 			refB = &(*mArr)(i, mArr->getColCount()-1);
-			ratio = *refB / (ref->getN());
+			ratio = (*refB !=0)? (*refB / (ref->getN())) : (*ref*0.001);
 			if ((ratio > 0) && ((min > ratio))) {
 				row = i;
 				min = ratio;
@@ -636,23 +639,30 @@ public:
 
 int main()
 {
-	int eqN = 4;
-	int xN = 3;
+	cout << "MMDO lab  # 6-7" << endl << "Creator: Dmytro Dutkovskyi" << endl;
+	cout << "----------------------------------\n" << endl;
+
+	int eqN = 5;
+	int xN = 4;
 
 	mNumb arr[] = { 
-	{2},{-1},
-	{1},{1},
-	{-3},{2}, 
-	{-2},{1}, };
+		{-8}, {2}, {-1},
+		{-4}, {1}, {1},
+		{-3}, {-3},{2},
+		{0},  {2},{3},
+		{0},  {2}, {-1} };
 
-	mNumb bArr[] = { 8,5,3,0 };
+	mNumb bArr[] = { 0,0,0,1,0 };
 
-    string sArr[4] = { "<=","<=",">=","=" };
+    string sArr[5] = { "<=","<=",">=","=","=" };
+
+	cout << "\nSeeking max of objective function:\n";
 
 	simplexSolver sMax(false,arr,bArr,sArr,eqN,xN-1);
 	sMax.printSolution();
 	sMax.solve();
 
+	cout << "\nSeeking min of objective function:\n";
 
 	simplexSolver sMin(true, arr, bArr, sArr, eqN, xN - 1);
 	sMin.printSolution();

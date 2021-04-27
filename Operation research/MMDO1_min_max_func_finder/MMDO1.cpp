@@ -167,8 +167,26 @@ void findMax(vector<Point*>& p, Equation e) {
 	cout << "\nPoint of maximum: " << *ref << " , value=" << e.findSolution(ref->getX(), ref->getY());
 }
 
+void findMax(vector<Point*>& p, Equation numerator, Equation denominator) {
+	double max = -100000;
+	Point* ref = NULL;
+	double temp=0;
+	for (int i = 0; i < p.size(); i++) {
+		double tempNum = numerator.findSolution(p[i]->getX(), p[i]->getY());
+		double tempDenum = denominator.findSolution(p[i]->getX(), p[i]->getY());
+		temp = (tempNum == 0 || tempDenum == 0) ? 0 : (tempNum / tempDenum);
+		
+		if (max <= temp) {
+			max = temp;
+			ref = p[i];
+		}
+	}
+
+	cout << "\nPoint of maximum: " << *ref << " , value=" << numerator.findSolution(ref->getX(), ref->getY())/ denominator.findSolution(ref->getX(), ref->getY());
+}
+
 void findMin(vector<Point*>& p, Equation e) {
-	double min = 0;
+	double min = -100000;
 	Point* ref = NULL;
 
 	for (int i = 0; i < p.size(); i++) {
@@ -179,7 +197,24 @@ void findMin(vector<Point*>& p, Equation e) {
 		}
 	}
 
-	cout << "\nPoint of minimum: " << *ref << " , value=" << e.findSolution(ref->getX(), ref->getY());
+	cout << "\nPoint of minimum: " << *ref << e.findSolution(ref->getX(), ref->getY());
+}
+
+void findMin(vector<Point*>& p, Equation numerator, Equation denominator) {
+	double max = 0;
+	Point* ref = NULL;
+	double temp=0;
+	for (int i = 0; i < p.size(); i++) {
+		double tempNum = numerator.findSolution(p[i]->getX(), p[i]->getY());
+		double tempDenum = denominator.findSolution(p[i]->getX(), p[i]->getY());
+		temp = (tempNum == 0 || tempDenum == 0) ? 0 : (tempNum / tempDenum);
+		if (max >= temp) {
+			max = temp;
+			ref = p[i];
+		}
+	}
+
+	cout << "\nPoint of maximum: " << *ref << numerator.findSolution(ref->getX(), ref->getY()) / denominator.findSolution(ref->getX(), ref->getY());
 }
 
 int main()
@@ -191,16 +226,16 @@ int main()
 
 	cout << "\npoints in range of functions:" << endl;
 
-	Equation target(-2,1,0,0);
+	Equation numerator(2,-1,0,0);
+	Equation denominator(2, 3, 0, 0);
 
 	vector<Equation*> equations;
 
 	equations.push_back(new Equation(2, -1, 8, 0));
-	equations.push_back(new Equation(1, 1, 5, 0));
-	equations.push_back(new Equation(-3, 2, 3, 0));
+	equations.push_back(new Equation(1, 1, 4, 0));
+	equations.push_back(new Equation(-3, 2, 3, 1));
 
 	vector<Point*> points;
-	points.push_back(new Point(0,0));
 
 	addXint(points, equations);
 	addYint(points, equations);
@@ -210,9 +245,9 @@ int main()
 		cout << *points[i];
 	}
 
-	findMax(points, target);
+	findMax(points, numerator, denominator);
 
-	findMin(points, target);
+	findMin(points, numerator, denominator);
 
 	cout << "\n";
 }
