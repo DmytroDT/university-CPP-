@@ -120,45 +120,31 @@ int splitByEq(vector<dChar*> vect) {
 void assignBits(vector<dChar*> vect, int splitPoint) {
 
 	string newCount;
+	double probSumP=0;
+	double probSumA=0;
 
+
+	//for (int i = 0; i <vect.size() ; i++) {
+	//	(i < splitPoint) ? (vect[i]->setCode(vect[i]->getCode() + "0")) : (vect[i]->setCode(vect[i]->getCode() + "1"));
+	//}
+
+
+	for (int i = 0; i <splitPoint ; i++) {
+		probSumP += vect[i]->getP();
+	}
+	for (int i = splitPoint; i < vect.size(); i++) {
+		probSumA += vect[i]->getP();
+	}
+	
 	for (int i = 0; i < vect.size(); i++) {
 		if (i < splitPoint) {
-			newCount = (vect[i]->getCode()+="0");
+			(probSumP > probSumA) ? (vect[i]->setCode(vect[i]->getCode() + "1")) : (vect[i]->setCode(vect[i]->getCode() + "0"));
 		}
 		else {
-			newCount = (vect[i]->getCode() += "1");
-		}
-		vect[i]->setCode(newCount);
-	}
-}
-
-bool  assignSubBits(vector<dChar*> vect) {
-	vector<int> groupLengths;
-	int counter=0;
-	int beg = 0;
-	bool checkAvailableGroups = false;
-	
-	for (int i = 1; i < vect.size(); i++){
-		if (vect[i - 1]->getCode() == vect[i]->getCode()) {
-			counter++;
-		}
-		else {
-			if ((abs(counter - beg) > 1)) {
-				beg = counter; 
-				counter = 0;
-			}
-		}
-
-		if (((i- counter) >1)&&((vect[i - 1]->getCode() != vect[i]->getCode())||(i==vect.size()-1))) {
-			vector<dChar*> subgroup(&vect[counter], &vect[i]);
-			groupLengths.push_back(subgroup.size());
-			counter += i;
-
-			assignBits(subgroup, splitByEq(subgroup));
-			checkAvailableGroups = true;
+			(probSumP < probSumA) ? (vect[i]->setCode(vect[i]->getCode() + "1")) : (vect[i]->setCode(vect[i]->getCode() + "0"));
 		}
 	}
-	return checkAvailableGroups;
+
 }
 
 vector<dChar*> subVect(vector<dChar*> vect,int begin,int end) {
@@ -170,25 +156,30 @@ vector<dChar*> subVect(vector<dChar*> vect,int begin,int end) {
 	return subvect;
 }
 
-bool  assignSubBits2(vector<dChar*> vect) {
-	vector<int> groupLengths;
+
+bool  assignSubBits3(vector<dChar*> vect) {
+
 	int counter = 0;
 	bool checkAvailableGroups = false;
 
-	for (int i = 1; i < vect.size(); i++) {
-
-		if ((vect[i]->getCode()!=vect[i -1]->getCode())||(i==vect.size()-1)) {
-			if (counter > 0) {
-				//vector<dChar*> subgroup(&vect[i - (counter+1)], &vect[i]);
-				vector<dChar*> subgroup = subVect(vect, i - (1+ counter), i);
-				assignBits(subgroup, splitByEq(subgroup));
-				counter = 0;
+	for (int i = 1; i < vect.size()+1; i++) {
+		if (i != vect.size()) {
+			if ((vect[i]->getCode() == vect[i - 1]->getCode())) {
+				counter++;
+				checkAvailableGroups = true;
+			}else {
+				if (counter > 0) {
+						vector<dChar*> subgroup = subVect(vect, i - (1+counter), i);
+						assignBits(subgroup, splitByEq(subgroup));
+						counter = 0;
+				}
 			}
 		}else {
-			counter++;
-			checkAvailableGroups = true;
+			if ((vect[i-1]->getCode() == vect[i - 2]->getCode())) {
+				vector<dChar*> subgroup = subVect(vect, i - (1 + counter), i);
+				assignBits(subgroup, splitByEq(subgroup));
+			}
 		}
-
 	}
 
 	return checkAvailableGroups;
@@ -222,7 +213,7 @@ void algorithmSP(vector<dChar*> vect) {
 	printGroup(vect);
 
 	do {
-		groupCount = assignSubBits2(vect);
+		groupCount = assignSubBits3(vect);
 		printGroup(vect);
 		cin.get();
 	} while (groupCount);
@@ -251,13 +242,6 @@ int main()
 	printPiTable(chrV);
 
 	algorithmSP(chrV);
-
-	//vector<dChar*> 
-
-	//vector<dChar*> sub(&chrV[0], &(chrV[chrV.size() - 1]));
-
-	//printPiTable(sub);
-
 
 }
 
