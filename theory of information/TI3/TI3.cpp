@@ -110,7 +110,7 @@ public:
 class dString {
 private:
 	vector<dChar*> mVect;
-
+	string code = "";
 
 public:
 	dString() {
@@ -163,16 +163,17 @@ public:
 		return mVect[ind];
 	}
 
-	string getCmpndCode() {
-		return mVect[0]->getCode();
+	string getCode() {
+		return code;
 	}
 
-	void cmpndConCode(char c) {
+	void conCode(char c) {
 		for (int i = 0; i < mVect.size(); i++) {
 			mVect[i]->conCode(c);
 		}
+		code = mVect[0]->getCode();
 	}
-
+	
 };
 
 class ShennonFano {
@@ -331,7 +332,7 @@ void printDStrs(vector<dString*> strV) {
 
 	for (int i = 0; i < strV.size(); i++) {
 		wcout << "\n" << strV[i]->calcStr() + L" " << strV[i]->calCmP() << " ";
-		cout << strV[i]->getCmpndCode();
+		cout << strV[i]->getCode();
 	}
 
 }
@@ -369,8 +370,8 @@ int main()
 	//init
 	sortDStr(strV);
 	stepV.push_back(strV);
-	printDStrs(strV);
 
+	//forward pass
 	do {
 		int svSize = stepV.back().size();
 		vector<dString*> strNew;
@@ -380,9 +381,18 @@ int main()
 		strNew.push_back(new dString(*stepV.back()[svSize - 1],*stepV.back()[svSize - 2]));
 		sortDStr(strNew);
 		stepV.push_back(strNew);
-		printDStrs(strNew);
 
 	}while(stepV.back().size() != 1);
+
+	//backwards pass
+	for (int i = stepV.size() - 2; i >= 0; i--) {
+		stepV[i][stepV[i].size() - 1]->conCode('0');
+		stepV[i][stepV[i].size() - 2]->conCode('1');
+	}
+	
+	for (int i = 0; i < stepV.size(); i++) {
+			printDStrs(stepV[i]);
+	}
 
 }
 
