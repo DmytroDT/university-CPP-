@@ -359,15 +359,30 @@ int main()
 	
 	vector<dString*> strV;
 
+	vector<vector<dString*>> stepV;
+
+	int sizeCount = 0;
+	//create dstr vect
 	for (int i = 0; i < chrV.size(); i++) {
 		strV.push_back(new dString(chrV[i]));
 	}
-
-
-	printDStrs(strV);
+	//init
 	sortDStr(strV);
+	stepV.push_back(strV);
 	printDStrs(strV);
 
+	do {
+		int svSize = stepV.back().size();
+		vector<dString*> strNew;
+		for (int i = 0; i < svSize - 2; i++) {
+			strNew.push_back(stepV.back()[i]);
+		}
+		strNew.push_back(new dString(*stepV.back()[svSize - 1],*stepV.back()[svSize - 2]));
+		sortDStr(strNew);
+		stepV.push_back(strNew);
+		printDStrs(strNew);
+
+	}while(stepV.back().size() != 1);
 
 }
 
