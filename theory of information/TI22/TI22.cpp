@@ -117,32 +117,36 @@ int splitByEq(vector<dChar*> vect) {
 	return i;
 }
 
-void assignBits(vector<dChar*> vect, int splitPoint) {
+int chooseGroupBits(vector<dChar*> vect, int splitPoint) {
+	double probSumP = 0;
+	double probSumA = 0;
 
-	string newCount;
-	double probSumP=0;
-	double probSumA=0;
+	int fGroup = 0;
 
-
-	//for (int i = 0; i <vect.size() ; i++) {
-	//	(i < splitPoint) ? (vect[i]->setCode(vect[i]->getCode() + "0")) : (vect[i]->setCode(vect[i]->getCode() + "1"));
-	//}
-
-
-	for (int i = 0; i <splitPoint ; i++) {
+	for (int i = 0; i < splitPoint; i++) {
 		probSumP += vect[i]->getP();
 	}
 	for (int i = splitPoint; i < vect.size(); i++) {
 		probSumA += vect[i]->getP();
 	}
-	
-	for (int i = 0; i < vect.size(); i++) {
-		if (i < splitPoint) {
-			(probSumP > probSumA) ? (vect[i]->setCode(vect[i]->getCode() + "1")) : (vect[i]->setCode(vect[i]->getCode() + "0"));
-		}
-		else {
-			(probSumP < probSumA) ? (vect[i]->setCode(vect[i]->getCode() + "1")) : (vect[i]->setCode(vect[i]->getCode() + "0"));
-		}
+
+	if (probSumP > probSumA) {
+		fGroup = 1;
+	}
+	return fGroup;
+}
+
+void asgnGroupBits(vector<dChar*> vect, int splitPoint,int initBit) {
+
+	int invBit = (initBit == 1) ? (0) : (1);
+	string fGroupB = to_string(initBit);
+	string sGroupB = to_string(invBit);
+
+	for (int i = 0; i < splitPoint; i++) {
+		vect[i]->setCode(vect[i]->getCode() + fGroupB);
+	}
+	for (int i = splitPoint; i < vect.size(); i++) {
+		vect[i]->setCode(vect[i]->getCode() + sGroupB);
 	}
 
 }
@@ -156,8 +160,7 @@ vector<dChar*> subVect(vector<dChar*> vect,int begin,int end) {
 	return subvect;
 }
 
-
-bool  assignSubBits3(vector<dChar*> vect) {
+bool  assignSubBits3(vector<dChar*> vect,int groupBit) {
 
 	int counter = 0;
 	bool checkAvailableGroups = false;
@@ -170,14 +173,14 @@ bool  assignSubBits3(vector<dChar*> vect) {
 			}else {
 				if (counter > 0) {
 						vector<dChar*> subgroup = subVect(vect, i - (1+counter), i);
-						assignBits(subgroup, splitByEq(subgroup));
+						asgnGroupBits(subgroup, splitByEq(subgroup),groupBit);
 						counter = 0;
 				}
 			}
 		}else {
 			if ((vect[i-1]->getCode() == vect[i - 2]->getCode())) {
 				vector<dChar*> subgroup = subVect(vect, i - (1 + counter), i);
-				assignBits(subgroup, splitByEq(subgroup));
+				asgnGroupBits(subgroup, splitByEq(subgroup), groupBit);
 			}
 		}
 	}
@@ -209,21 +212,25 @@ void printPiTable(vector<dChar*> vect) {
 
 void algorithmSP(vector<dChar*> vect) {
 	bool groupCount;
-	assignBits(vect, splitByEq(vect));
-	printGroup(vect);
+	int gBt= chooseGroupBits(vect, splitByEq(vect));
 
 	do {
-		groupCount = assignSubBits3(vect);
+		groupCount = assignSubBits3(vect,gBt);
 		printGroup(vect);
 		cin.get();
 	} while (groupCount);
 }
+
 
 int main()
 {
 	setlocale(LC_ALL, "");
 	SetConsoleCP(1251);
 	SetConsoleOutputCP(1251);
+
+	string inputPath;
+	wstring alphabetStr;
+	wstring inputStr;
 
 	wstring_convert<codecvt_utf8<wchar_t> > converter;
 
@@ -238,10 +245,27 @@ int main()
 						};
 	
 	sort(chrV.begin(), chrV.end(), &ptrCmpP);
-
+	reverse(chrV.begin(), chrV.end());
 	printPiTable(chrV);
 
 	algorithmSP(chrV);
+
+	vector<dChar*> chrV2{	new dChar({L'à'},{L'À'},0.125f),
+							new dChar({L'á'},{L'Á'},0.125f),
+							new dChar({L'â'},{L'Â'},0.125f),
+							new dChar({L'ã'},{L'Ã'},0.125f),
+
+							new dChar({L'ä'},{L'Ä'},0.125f),
+							new dChar({L'å'},{L'Å'},0.125f),
+							new dChar({L'º'},{L'ª'},0.125f),
+							new dChar({L'æ'},{L'Æ'},0.125f)
+	};
+
+	sort(chrV2.begin(), chrV2.end(), &ptrCmpP);
+	reverse(chrV2.begin(), chrV2.end());
+	printPiTable(chrV2);
+
+	algorithmSP(chrV2);
 
 }
 

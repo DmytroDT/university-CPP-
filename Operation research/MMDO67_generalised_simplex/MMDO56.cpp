@@ -571,6 +571,7 @@ public:
 			ref = &(*mArr)(i, col);
 			refB = &(*mArr)(i, mArr->getColCount()-1);
 			ratio = (*refB !=0)? (*refB / (ref->getN())) : (*ref*0.001);
+			ratio = (*refB / (ref->getN()));
 			if ((ratio > 0) && ((min > ratio))) {
 				row = i;
 				min = ratio;
@@ -644,6 +645,31 @@ int main()
 
 	int eqN = 5;
 	int xN = 4;
+
+	mNumb arr1[] = {
+	{2}, { -1 },
+	{ 1 }, { 1 },
+	{ -3 }, { 2 },
+	{ -2 }, { 1 },
+};
+
+	mNumb bArr1[] = { 8,5,3,0 };
+	
+	string sArr1[4] = { "<=","<=",">=","=" };
+	
+	simplexSolver sMaxlb7(false, arr1, bArr1, sArr1, eqN-1, xN - 2);
+	
+	simplexSolver sMinlb7(true, arr1, bArr1, sArr1, eqN-1, xN - 2);
+	
+
+	cout << "\nSeeking max of objective function:\n";
+	sMaxlb7.solve();
+	sMaxlb7.printSolution();
+	
+	
+	cout << "\nSeeking min of objective function:\n";
+	sMinlb7.solve();
+	sMinlb7.printSolution();
 
 	mNumb arr[] = { 
 		{-8}, {2}, {-1},
