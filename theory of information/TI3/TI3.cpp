@@ -104,13 +104,15 @@ public:
 	void conCode(char c) {
 		code += c;
 	}
-
 };
 
 class dString {
 private:
 	vector<dChar*> mVect;
 	string code = "";
+	float compP = 0.;
+	vector<dString*> dVect;
+	wstring compStr = L"";
 
 public:
 	dString() {
@@ -119,41 +121,66 @@ public:
 
 	dString(dChar* c) {
 		mVect.push_back(c);
+		compP = c->getP();
+		compStr += c->getlChar();
 	}
 
 	dString(dChar* o, dChar* t) {
 		mVect.push_back(o);
 		mVect.push_back(t);
+		compP = o->getP() * t->getP();
+		compStr += o->getlChar();
+		compStr+=t->getlChar();
 	}
 
-	dString(const dString& o, const dString& t) {
-		cmpndJoin(o, t);
+	dString(dString* o, dChar* t) {
+
+		mVect.push_back(t);
+		compP = o->getP() * t->getP();
+		compStr += o->getStr();
+		compStr += t->getlChar();
 	}
 
-	void cmpndJoin(const dString& o, const dString& t) {
-		for (int i = 0; i < o.mVect.size(); i++) {
-			this->mVect.push_back(o.mVect[i]);
-		}
-		for (int i = 0; i < t.mVect.size(); i++) {
-			this->mVect.push_back(t.mVect[i]);
-		}
+	dString( dString* o,  dString* t) {
+		//cmpndJoin(o, t);
+		dVect.push_back(o);
+		dVect.push_back(t);
+		compP = calCmP();
+		compStr += (*o).compStr + (*t).compStr;
 	}
+
+	//void cmpndJoin(const dString& o, const dString& t) {
+	//	for (int i = 0; i < o.mVect.size(); i++) {
+	//		this->mVect.push_back(o.mVect[i]);
+	//	}
+	//	for (int i = 0; i < t.mVect.size(); i++) {
+	//		this->mVect.push_back(t.mVect[i]);
+	//	}
+	//}
 
 	float calCmP() {
 		float out = 0.;
-		for (int i = 0; i < mVect.size(); i++) {
-			out += mVect[i]->getP();
+		for (int i = 0; i < dVect.size(); i++) {
+			out += (*dVect[i]).compP;
 		}
 		return out;
 	}
 
-	wstring calcStr() {
-		wstring out=L"";
+	float calJointP() {
+		float out = 1.;
 		for (int i = 0; i < mVect.size(); i++) {
-			out += mVect[i]->getlChar();
+			out *= mVect[i]->getP();
 		}
 		return out;
 	}
+
+	//wstring calcStr() {
+	//	wstring out=L"";
+	//	for (int i = 0; i < mVect.size(); i++) {
+	//		out += mVect[i]->getlChar();
+	//	}
+	//	return out;
+	//}
 	
 	int getLen() {
 		return mVect.size();
@@ -167,13 +194,37 @@ public:
 		return code;
 	}
 
-	void conCode(char c) {
-		for (int i = 0; i < mVect.size(); i++) {
-			mVect[i]->conCode(c);
+	//void conCode(char c) {
+	//	for (int i = 0; i < mVect.size(); i++) {
+	//		mVect[i]->conCode(c);
+	//	}
+	//	code = mVect[0]->getCode();
+	//}
+
+	void conCode(char c) {	
+		code += c;
+		for (int i = 0; i < dVect.size(); i++) {
+		
+			(*dVect[i]).conCode(c);
 		}
-		code = mVect[0]->getCode();
 	}
-	
+
+	int codeLen() {
+		int counter = 0;
+		while (code[counter] != '\0') {
+			counter++;
+		}
+		return counter;
+	}
+
+	float getP() {
+		return compP;
+	}
+
+	wstring getStr() {
+		return compStr;
+	}
+
 };
 
 class ShennonFano {
@@ -324,14 +375,14 @@ void localeInit() {
 	SetConsoleOutputCP(1251);
 }
 
-bool dStrPtrCmp(dString* a, dString* b) { return (a->calCmP() < b->calCmP()); }
+bool dStrPtrCmp(dString* a, dString* b) { return (a->getP() < b->getP()); }
 
 void printDStrs(vector<dString*> strV) {
 
 	cout << "\n";
 
 	for (int i = 0; i < strV.size(); i++) {
-		wcout << "\n" << strV[i]->calcStr() + L" " << strV[i]->calCmP() << " ";
+		wcout << "\n" << strV[i]->getStr() + L" " << strV[i]->getP() << " ";
 		cout << strV[i]->getCode();
 	}
 
@@ -342,11 +393,79 @@ void sortDStr(vector<dString*>& strV) {
 	reverse(strV.begin(), strV.end());
 }
 
+void huffmanForwardPass(vector<vector<dString*>>& stepV) {
+	do {
+		int svSize = stepV.back().size();
+		vector<dString*> strNew;
+		for (int i = 0; i < svSize - 2; i++) {
+			strNew.push_back(stepV.back()[i]);
+		}
+		strNew.push_back(new dString(stepV.back()[svSize - 1],stepV.back()[svSize - 2]));
+		sortDStr(strNew);
+		stepV.push_back(strNew);
+
+	} while (stepV.back().size() != 1);
+}
+
+void huffmanBackwardsPass(vector<vector<dString*>>& stepV) {
+	for (int i = stepV.size() - 2; i >= 0; i--) {
+		
+		stepV[i][stepV[i].size() - 1]->conCode('0');
+		stepV[i][stepV[i].size() - 2]->conCode('1');
+	}
+}
+
+void huffmanAlgorithm(vector<vector<dString*>> stepV) {
+	sortDStr(stepV.back());
+	huffmanForwardPass(stepV);
+	huffmanBackwardsPass(stepV);
+	for (int i = 0; i < stepV.size(); i++) {
+		printDStrs(stepV[i]);
+	}
+}
+
+float avgCodeLen(vector<dString*>& strV) {
+	float result = 0.;
+
+	for (int i = 0; i < strV.size(); i++) {
+		result += strV[i]->getP() * strV[i]->codeLen();
+	}
+	return result;
+}
+
+float minCodeLen(vector<dString*>& strV) {
+	float result = 0.;
+
+	for (int i = 0; i < strV.size(); i++) {
+		result += strV[i]->getP()*(log2(strV[i]->getP()));
+	}
+	return -result;
+}
+
+void printCodeLengths(vector<dString*>& strV) {
+	cout <<  "\n\n Minimal code length: " << minCodeLen(strV)<<"\n Average code length: " << avgCodeLen(strV);
+}
+
+vector<dString*> createBlock2(vector<dChar*>& strV) {
+	vector<dString*> newV;
+	for (int i = 0; i < strV.size(); i++) {
+		for (int j = 0; j < strV.size(); j++) {
+			newV.push_back(new dString(strV[i],strV[j]));
+		}
+	}
+	return newV;
+}
+
 
 
 int main()
 {
 	localeInit();
+
+	vector<dChar*> blChrSt{		new dChar({L'a'},{L'A'},0.45f),
+								new dChar({L'b'},{L'B'},0.11f),
+								new dChar({L'c'},{L'C'},0.44f)
+	};
 
 	vector<dChar*> chrV{	new dChar({L'à'},{L'À'},0.11f),
 							new dChar({L'á'},{L'Á'},0.09f),
@@ -357,42 +476,30 @@ int main()
 							new dChar({L'º'},{L'ª'},0.13f),
 							new dChar({L'æ'},{L'Æ'},0.22f)
 	};
+
+
 	
 	vector<dString*> strV;
 
 	vector<vector<dString*>> stepV;
-
-	int sizeCount = 0;
+	
 	//create dstr vect
 	for (int i = 0; i < chrV.size(); i++) {
 		strV.push_back(new dString(chrV[i]));
 	}
 	//init
-	sortDStr(strV);
-	stepV.push_back(strV);
-
-	//forward pass
-	do {
-		int svSize = stepV.back().size();
-		vector<dString*> strNew;
-		for (int i = 0; i < svSize - 2; i++) {
-			strNew.push_back(stepV.back()[i]);
-		}
-		strNew.push_back(new dString(*stepV.back()[svSize - 1],*stepV.back()[svSize - 2]));
-		sortDStr(strNew);
-		stepV.push_back(strNew);
-
-	}while(stepV.back().size() != 1);
-
-	//backwards pass
-	for (int i = stepV.size() - 2; i >= 0; i--) {
-		stepV[i][stepV[i].size() - 1]->conCode('0');
-		stepV[i][stepV[i].size() - 2]->conCode('1');
-	}
 	
-	for (int i = 0; i < stepV.size(); i++) {
-			printDStrs(stepV[i]);
-	}
+	
+	stepV.push_back(strV);
+	
+	huffmanAlgorithm(stepV);
+	printCodeLengths(strV);
+	//fix blocks
+	stepV.clear();
+	stepV.push_back(createBlock2(blChrSt));
+	huffmanAlgorithm(stepV);
+	printCodeLengths(stepV[0]);
+	stepV.clear();
 
 }
 
