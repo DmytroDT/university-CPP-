@@ -142,21 +142,11 @@ public:
 	}
 
 	dString( dString* o,  dString* t) {
-		//cmpndJoin(o, t);
 		dVect.push_back(o);
 		dVect.push_back(t);
 		compP = calCmP();
 		compStr += (*o).compStr + (*t).compStr;
 	}
-
-	//void cmpndJoin(const dString& o, const dString& t) {
-	//	for (int i = 0; i < o.mVect.size(); i++) {
-	//		this->mVect.push_back(o.mVect[i]);
-	//	}
-	//	for (int i = 0; i < t.mVect.size(); i++) {
-	//		this->mVect.push_back(t.mVect[i]);
-	//	}
-	//}
 
 	float calCmP() {
 		float out = 0.;
@@ -173,14 +163,6 @@ public:
 		}
 		return out;
 	}
-
-	//wstring calcStr() {
-	//	wstring out=L"";
-	//	for (int i = 0; i < mVect.size(); i++) {
-	//		out += mVect[i]->getlChar();
-	//	}
-	//	return out;
-	//}
 	
 	int getLen() {
 		return mVect.size();
@@ -193,13 +175,6 @@ public:
 	string getCode() {
 		return code;
 	}
-
-	//void conCode(char c) {
-	//	for (int i = 0; i < mVect.size(); i++) {
-	//		mVect[i]->conCode(c);
-	//	}
-	//	code = mVect[0]->getCode();
-	//}
 
 	void conCode(char c) {	
 		code += c;
@@ -415,13 +390,10 @@ void huffmanBackwardsPass(vector<vector<dString*>>& stepV) {
 	}
 }
 
-void huffmanAlgorithm(vector<vector<dString*>> stepV) {
+void huffmanAlgorithm(vector<vector<dString*>>& stepV) {
 	sortDStr(stepV.back());
 	huffmanForwardPass(stepV);
 	huffmanBackwardsPass(stepV);
-	for (int i = 0; i < stepV.size(); i++) {
-		printDStrs(stepV[i]);
-	}
 }
 
 float avgCodeLen(vector<dString*>& strV) {
@@ -456,7 +428,21 @@ vector<dString*> createBlock2(vector<dChar*>& strV) {
 	return newV;
 }
 
+vector<dString*> createBlock3(vector<dChar*>& strV,vector<dString*>& dstrV) {
+	vector<dString*> newV;
+	for (int i = 0; i < dstrV.size(); i++) {
+		for (int j = 0; j < strV.size(); j++) {
+			newV.push_back(new dString(dstrV[i], strV[j]));
+		}
+	}
+	return newV;
+}
 
+void printSteps(vector<vector<dString*>>& stepV) {
+	for (int i = 0; i < stepV.size(); i++) {
+		printDStrs(stepV[i]);
+	}
+}
 
 int main()
 {
@@ -489,17 +475,26 @@ int main()
 	}
 	//init
 	
-	
 	stepV.push_back(strV);
 	
 	huffmanAlgorithm(stepV);
+	printSteps(stepV);
 	printCodeLengths(strV);
+
 	//fix blocks
 	stepV.clear();
 	stepV.push_back(createBlock2(blChrSt));
+	
 	huffmanAlgorithm(stepV);
 	printCodeLengths(stepV[0]);
-	stepV.clear();
+	
+	vector<dString*> nV= createBlock2(blChrSt);
 
+	stepV.clear();
+	stepV.push_back(createBlock3(blChrSt, nV));
+	huffmanAlgorithm(stepV);
+	printCodeLengths(stepV[0]);
+	cout << "\n\n";
+	return 0;
 }
 
