@@ -433,13 +433,19 @@ int main()
 {
 	localeInit();
 	
-
+	string choice;
+	wstring inet;
+	cout << "\nType 1 to read file, type 2 to input seqence yourself.\n";
+	cin >> choice;
+	if (choice == "2") {
+		cout << "\nInput Your seqence:\n";
+		wcin >> inet;
+	} else{
+		inet = readIntoWStr("name");
+	}
 
 	wstring alphabetStr = readIntoWStr("a3");
 	vector<dChar*> vect = initDchrV(alphabetStr);
-	//wstring namel = convert2lowerCase(readIntoWStr("name"), vect);
-	wstring inet;
-	wcin >> inet;
 
 	wstring namel = convert2lowerCase(inet, vect);
 
@@ -453,7 +459,6 @@ int main()
 	e.disAlphabet();
 	e.encode();
 	e.disCode();
-	
 	e.decode();
 }
 
