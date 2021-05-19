@@ -314,44 +314,6 @@ vector<dString*> baseAlphabet(vector<dChar*> inpStr) {
 	return resV;
 }
 
-void s(vector<dString*>& bAlphabet, vector<dString*> inpStr,int i,int* chrC) {
-
-	if (!dStrMatch(dString(inpStr[i], inpStr[i+1]), bAlphabet)) {
-		bAlphabet.push_back(new dString(inpStr[i], inpStr[i + 1], *chrC++));
-	}
-
-}
-
-string LZWencode(vector<dString*>& bAlphabet, vector<dString*> inpStr) {
-	int chrC= bAlphabet[bAlphabet.size() - 1]->getNum();
-	string out = "";
-	int i = 0;
-		
-	while (i != inpStr.size()-1) {
-		
-		//if (!(i + 1 > inpStr.size() - 1)) {
-		//	
-		//	dString* a = inpStr[i];
-		//	//if (!dStrMatch(a, bAlphabet)) {
-		//	//	bAlphabet.push_back(new dString(inpStr[i], inpStr[i + 1],++chrC));
-		//	//}
-		//	int e = i+1;
-		//	while (!dStrMatch(dString(a, inpStr[i + 1]), bAlphabet)) {
-		//		
-		//		a =new dString(a,inpStr[e++]);
-		//	}
-		//	bAlphabet.push_back(a);
-		//}
-		//
-		//out += " "+to_string(findC((*inpStr[i]), bAlphabet));
-
-
-
-		i++;
-	}
-	return out;
-}
-
 void printDstrs(vector<dString*> a) {
 
 	for (int i = 0; i < a.size(); i++) {
@@ -363,55 +325,71 @@ class LZW {
 private:
 	vector< dString*> cV;
 	vector< dString*> alV;
+	vector<int> encodedSeq;
+	vector< dString*> orV;
+
 public:
 	LZW(vector< dString*> cV, vector< dString*> alV) {
 		this->cV = cV;
 		this->alV = alV;
+		orV = copyVect();
 	}
 
-	//int recG(dString* str, int pos) {
-	//	int ret = 0;
-	//	if (pos + 1 < cV.size()) {
-	//		dString* a = new dString (str ,cV[pos + 1],alV.size()+1);
-	//		if (dStrMatch(*a, alV)) {
-	//			
-	//			ret=recG(a, pos + 1);
-	//			ret++;
-	//		}
-	//		else {
-	//			alV.push_back(a);
-	//		}
-	//	}
-	//	return ret;
-	//}
-
-
 	int recG(dString* str, int* pos) {
-		int ret = 0;
+		int ret = findC(*str, alV);
 		if ((*pos) + 1 < cV.size()) {
 			dString* a = new dString(str, cV[(*pos) + 1], alV.size() + 1);
+
 			if (dStrMatch(*a, alV)) {
 				(*pos)++;
 				ret = recG(a, pos);
-			
 			}
 			else {
 				alV.push_back(a);
-				ret = a->getNum();
 			}
 		}
 		return ret;
 	}
 
-	void solve() {
+	string decG(dString* str, int* pos) {
+		string ret =  "";
+		if ((*pos) + 1 < cV.size()) {
+			dString* a = new dString(str, cV[(*pos) + 1], alV.size() + 1);
+
+			if (dStrMatch(*a, alV)) {
+				(*pos)++;
+				ret = recG(a, pos);
+			}
+			else {
+				alV.push_back(a);
+			}
+		}
+		return ret;
+	}
+
+	void encode() {
+		encodedSeq.clear();
 		for (int i = 0; i < cV.size(); i++) {
-			cout<<"\n"<<recG(cV[i], &i);
+			encodedSeq.push_back(recG(cV[i], &i));
+		}
+	}
+
+	string decode() {
+		for (int i = 0; i < encodedSeq.size(); i++) {
 			
 		}
 	}
 
 	void dis() {
 		printDstrs(alV);
+	}
+
+	vector< dString*> copyVect() {
+		vector< dString*> a;
+		for (int i = 0; i < alV.size(); i++) {
+			a.push_back(alV[i]);
+		}
+		return a;
 	}
 
 };
@@ -437,44 +415,19 @@ int main()
 	vector<dChar*> vect = initDchrV(alphabetStr);
 	wstring namel = convert2lowerCase(readIntoWStr("name"), vect);
 
-
-
 	vector<dString*> alV = baseAlphabet(wstr2dChar(namel));
 	wcout << alphabetStr<<"\n\n";
 	wcout << namel;
 	//printDstrs(alV);
-	//cout <<"\n"<< LZWencode( alV, dchar2dStr(wstr2dChar(namel)));
 	//printDstrs(alV);
 
 	vector<dString*> opV = dchar2dStr(wstr2dChar(namel));
 	//printDstrs(opV);
-	
-	//for (int i = 0; i < opV.size()-1; i++) {
-	//	if (findC(*opV[i], alV) != 0) {
-	//		//cout <<" "<< findC(*opV[i], alV);
-	//	}
-	//	rec(*opV[i], opV, alV, i);
-	//}
-	//
-	//printDstrs(alV);
 
 	LZW e(opV, alV);
-	e.solve();
+	e.encode();
 	e.dis();
 }
 
 
 
-
-	//void rec(dString str, vector< dString*> cV, vector< dString*> al, int pos) {
-	//	if (pos + 1 != al.size()) {
-	//		dString a(&str, cV[pos + 1], al.size() + 1);
-	//		if (dStrMatch(a, al)) {
-	//			rec(a, cV, al, pos + 1);
-	//		}
-	//		else {
-	//			al.push_back(&a);
-	//			//return a.getNum();
-	//		}
-	//	}
-	//}
