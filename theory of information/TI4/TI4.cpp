@@ -351,17 +351,18 @@ public:
 		return ret;
 	}
 
-	string decG(dString* str, int* pos) {
-		string ret =  "";
-		if ((*pos) + 1 < cV.size()) {
-			dString* a = new dString(str, cV[(*pos) + 1], alV.size() + 1);
+	int decG(dString* str, int* pos) {
+		int ret = str->getNum();
 
-			if (dStrMatch(*a, alV)) {
+		if ((*pos) + 1 < encodedSeq.size()) {
+			dString* a = new dString(str, getByN(encodedSeq[(*pos) + 1]), orV.size() + 1);
+
+			if (dStrMatch(*a, orV)) {
 				(*pos)++;
 				ret = recG(a, pos);
 			}
 			else {
-				alV.push_back(a);
+				orV.push_back(a);
 			}
 		}
 		return ret;
@@ -374,14 +375,25 @@ public:
 		}
 	}
 
-	string decode() {
+	wstring decode() {
+		wstring out = L"";
 		for (int i = 0; i < encodedSeq.size(); i++) {
-			
+			out+= getByN(decG(getByN(encodedSeq[i]), &i))->getStr();
+			wcout << "\n" << out;
+		}
+		wcout << "\n\n"<<out<<"\n\n";
+		return out;
+	}
+
+	void disCode() {
+		cout << "\n";
+		for (int i = 0; i < encodedSeq.size(); i++) {
+			cout <<" "<<encodedSeq[i];
 		}
 	}
 
-	void dis() {
-		printDstrs(alV);
+	void disAlphabet() {
+		printDstrs(orV);
 	}
 
 	vector< dString*> copyVect() {
@@ -390,6 +402,16 @@ public:
 			a.push_back(alV[i]);
 		}
 		return a;
+	}
+
+	dString* getByN(int n) {
+		dString* d = new dString();
+		for (int i = 0; i < orV.size(); i++) {
+			if (orV[i]->getNum() == n) {
+				d= orV[i];
+			}
+		}
+		return d;
 	}
 
 };
@@ -410,23 +432,29 @@ void rec(dString str, vector< dString*> cV, vector< dString*>& al, int pos) {
 int main()
 {
 	localeInit();
+	
+
 
 	wstring alphabetStr = readIntoWStr("a3");
 	vector<dChar*> vect = initDchrV(alphabetStr);
-	wstring namel = convert2lowerCase(readIntoWStr("name"), vect);
+	//wstring namel = convert2lowerCase(readIntoWStr("name"), vect);
+	wstring inet;
+	wcin >> inet;
+
+	wstring namel = convert2lowerCase(inet, vect);
 
 	vector<dString*> alV = baseAlphabet(wstr2dChar(namel));
-	wcout << alphabetStr<<"\n\n";
+
 	wcout << namel;
-	//printDstrs(alV);
-	//printDstrs(alV);
 
 	vector<dString*> opV = dchar2dStr(wstr2dChar(namel));
-	//printDstrs(opV);
 
 	LZW e(opV, alV);
+	e.disAlphabet();
 	e.encode();
-	e.dis();
+	e.disCode();
+	
+	e.decode();
 }
 
 
