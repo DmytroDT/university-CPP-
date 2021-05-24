@@ -11,7 +11,6 @@
 #include <bitset>
 using namespace std;
 
-
 #define wd 8
 
 class dChar {
@@ -317,16 +316,16 @@ void tryToCorrect(string code) {
 
 
 	if ((pos == 0) && (getParity0(code) == '0')) {
-		cout << "\nNo errors detected,extracted original sequence = "<< getOgCode(code);
+		cout << "\nNo errors detected,extracted original sequence = "<< getOgCode(code)<< "\n";
 	}
 	else {
 		inverB(code, pos);
 
 		if ((checkC(code) == 0) && (getParity0(code) == '0')) {
-			cout << "\nCorrected bit "<<pos<<" ,extracted original sequence = " << getOgCode(code);
+			cout << "\nCorrected bit "<<pos<<" ,extracted original sequence = " << getOgCode(code)<<"\n";
 		}
 		else {
-			cout << "\ndouble error occured, resend the code";
+			cout << "\ndouble error occured, resend the code"<< "\n";
 		}
 
 	}
@@ -342,6 +341,8 @@ int main()
 	setlocale(LC_ALL, "");
 	SetConsoleCP(1251);
 	SetConsoleOutputCP(1251);
+
+	int ind = 0;
 
 	string inputPath;
 	wstring alphabetStr;
@@ -364,15 +365,39 @@ int main()
 	printPiTable(chrV);
 
 	algorithmSP(chrV);
+
+
+
 	code = hEncode(chrV[1]->getCode());
 	cout << "\n\n" << chrV[1]->getCode();
-	cout << "\n\n" << code ;
-	inverB(code, 3);
-	inverB(code, 4);
-	cout << "\n" << code ;
-	cout << "\n" <<checkC(code);
-	cout << "\n" << getParity0(code) ;
-	tryToCorrect(code);
+
+	cout << "\n0-don't inver bits, 1-invert 1 bit, 2-invert 2 bits.";
+	cin >> ind;
+
+	switch (ind) {
+	case(0):
+		cout << "\n" << code;
+		tryToCorrect(code); 
+		break;
+	case(1):
+		cout << "\nInput bit to be inverted:";
+		cin >> ind;
+		inverB(code, ind);
+		cout << "\n" << code ;
+		tryToCorrect(code);
+		break;
+	case(2):
+		cout << "\nInput first bit to be inverted:";
+		cin >> ind;
+		inverB(code, ind);
+		cout << "\nInput second bit to be inverted:";
+		cin >> ind;
+		inverB(code, ind);
+		cout << "\n" << code;
+		tryToCorrect(code);
+		break;
+
+	}
 }
 
 
